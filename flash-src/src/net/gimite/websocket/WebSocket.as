@@ -74,13 +74,16 @@ public class WebSocket extends EventDispatcher {
   private var logger:IWebSocketLogger;
   private var base64Encoder:Base64Encoder = new Base64Encoder();
   
-  private var useFlashSecureSocket:Boolean = false;
+  private var useFlashSecureSocket:Boolean;
+  private var connectionTimeout:int;
   
   public function WebSocket(
-      id:int, url:String, protocols:Array, origin:String,
-      proxyHost:String, proxyPort:int,
-      cookie:String, headers:String,
-      logger:IWebSocketLogger, useFlashSecureSocket:Boolean = false) {
+	  id:int, url:String, protocols:Array, origin:String,
+	  proxyHost:String, proxyPort:int,
+	  cookie:String, headers:String,
+	  logger:IWebSocketLogger,
+	  useFlashSecureSocket:Boolean = false,
+	  connectionTimeout:int = 1000) {
     this.logger = logger;
     this.id = id;
     this.url = url;
@@ -95,6 +98,7 @@ public class WebSocket extends EventDispatcher {
     this.requestedProtocols = protocols;
     this.cookie = cookie;
 	this.useFlashSecureSocket = useFlashSecureSocket;
+	this.connectionTimeout = connectionTimeout;
     // if present and not the empty string, headers MUST end with \r\n
     // headers should be zero or more complete lines, for example
     // "Header1: xxx\r\nHeader2: yyyy\r\n"
@@ -134,6 +138,10 @@ public class WebSocket extends EventDispatcher {
         socket = rawSocket;
       }
     }
+	
+	// apply timeout to socket connections
+	rawSocket.timeout = socket.timeout = connectionTimeout;
+	
     rawSocket.addEventListener(Event.CLOSE, onSocketClose);
     rawSocket.addEventListener(Event.CONNECT, onSocketConnect);
     rawSocket.addEventListener(IOErrorEvent.IO_ERROR, onSocketIoError);
